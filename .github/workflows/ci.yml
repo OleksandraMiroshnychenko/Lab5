@@ -6,11 +6,11 @@ on:
       - develop
 
   pull_request_review:
-    types: [submitted]
+    types: [submitted]  # Це працює, якщо хочеш перевіряти, чи було подано рецензію
 
 jobs:
   build:
-    runs-on: windows-latest  
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -61,8 +61,7 @@ jobs:
 
       - name: Count lines of code with Cloc
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cloc
+          choco install cloc
           cloc src/ > cloc-report.txt
           cat cloc-report.txt
 
@@ -70,14 +69,14 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
-          export PATH=$PATH:$(pwd)/sonar-scanner-4.8.0.2856-linux/bin
+          curl -L https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-windows.zip -o sonar-scanner.zip
+          powershell -Command "Expand-Archive -Path sonar-scanner.zip -DestinationPath sonar-scanner"
+          $env:PATH += ";$(pwd)\sonar-scanner\sonar-scanner-4.8.0.2856-windows\bin"
           sonar-scanner \
             -Dsonar.projectKey=MyProject \
             -Dsonar.organization=my-org \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=$SONAR_TOKEN
+            -Dsonar.login=$env:SONAR_TOKEN
 
       - name: Запуск flake8 через Reviewdog
         uses: reviewdog/action-flake8@v2
